@@ -1,4 +1,5 @@
-Bulk Close Purchase Orders App
+Bulk Close Purchase Orders App.
+
 A light web based application which allows users with correct role permissions to close purchase order headers in bulk.
 Security and Permissions:
 As this app uses standard Coupa permissions there is no additional security or content required. The acting user must be logged into their Coupa instance and have the ability to close purchase order headers. All purchase order close history events are still retained and all standard purchase order closing requirements apply, see Coupa’s PO close documentation for support. https://success.coupa.com/Support/Docs/Core_Apps/Procurement/Getting_Started_with_Procurement/Purchase_Orders/Closing_Purchase_Orders
