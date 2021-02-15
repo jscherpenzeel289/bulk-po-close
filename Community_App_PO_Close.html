@@ -1,0 +1,1005 @@
+<!DOCTYPE html>
+<html lang="en">	
+	<head>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Bulk Purchase Order Header Close v1.0</title>
+		
+		<!--<script src="https://cdn.jsdelivr.net/npm/vue/dist/vue.js"></script>-->
+		<script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
+		<script src="https://unpkg.com/axios@0.19.1/dist/axios.min.js"></script>
+		<link href="https://fonts.googleapis.com/css?family=Muli:200,300,400,600,700,800,900" rel="stylesheet">
+
+		<!----------------------------------------------------------------------------------------------------------------		
+		***COMMENTS***
+		
+		*Optional varibles can be set using the address URL parameters. example: https://yourInstance.coupahost.com/public_attachments/1maVNpOK?key=X1234523423r23&color=ff0000&lines=100&cur=USD
+		*First parameter always start with: ?       example: ?key=
+		*All additional parameters start with: &		example: &color
+		*To set API key: key=      *required for app to work
+		*To set table band color, use the color hash number: color=
+		*To set input line limit: lines=
+		
+		*To add role security save the url link containing the API key to a Coupa homepage panel and use content groups to restricit who can use the application
+		*If using panel apps with menu apps, ensure you apply the menu app to the user role
+		
+		*App does not work with IE, only modern browsers
+		
+		VERSION UPDATES
+		
+		1.0
+		
+		---------------------------------------------------------------------------------------------------------------->
+		
+	<style>
+    /*═════════════════════════════════════════════════════════════════════════════════════════════════════*/
+    /*																                  Global
+	  /*═════════════════════════════════════════════════════════════════════════════════════════════════════*/	
+    [v-cloak] {
+      display: none;
+    }
+    * {
+      box-sizing: border-box;
+      color: #444444;
+    }
+    body {
+      background: #fff;
+      margin: 0;
+      font-family: "muli", Helvetica, Arial, sans-serif;
+      padding: 20px;
+    }
+    *:focus {
+      outline: none;
+    }
+		a {
+			text-decoration: none;
+		}
+		a {
+			color: 00bbff;
+			text-decoration: underline;
+			cursor: pointer;
+		}
+		a:hover {
+			color: orange;
+		}
+    input::-webkit-outer-spin-button,
+    input::-webkit-inner-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type="number"] {
+      -moz-appearance: textfield;
+    }
+		.middle {
+			text-align: center;
+		}
+		#app {
+			width: 980px;
+			margin: auto;
+		}
+		h1 {
+			font-family: "OpenSansRegular",helvetica,arial,sans-serif;
+			font-size: 28px;
+			font-weight: normal;
+			margin: 5px 0 5px 0;
+		}
+		.btn {
+			display: inline-block;
+			border: 1px solid #e0e0e0;
+			border-radius: 5px;
+			color: #2e2d2e;
+			text-decoration: none;
+			font-weight: 700;
+			height: 25px;
+			line-height: 24px;
+			margin-left: 15px;
+			padding: 0 20px;
+			white-space: nowrap;
+			cursor: pointer;
+			outline: none;
+			font-size: 13px;
+		}
+		.btn_blue {
+			background-color: #268ecd;
+			color: #fff;
+		}
+		.btn_blue:hover {
+			background: #46b8e9;
+		}
+		.btn_green {
+			background: #6aaf57;
+			color: #fff;
+		}
+		.btn_green:hover {
+			background: #89d673;
+		}
+		.btn_silver {
+			background: #d1d1d1;
+		}
+		.btn_silver:hover {
+			background: #e8eae8;
+		}
+		.btn_red {
+			background: #ff2626;
+			color: #fff;
+		}
+		.btn_red:hover {
+			background: #ff5454;
+		}
+		
+    /*═════════════════════════════════════════════════════════════════════════════════════════════════════*/
+    /*																                  Aciont Bar
+	  /*═════════════════════════════════════════════════════════════════════════════════════════════════════*/
+		.action_grid {
+			display: grid;
+			grid-template-columns: auto 250px;
+			width: 100%;
+			color: #fff;
+			background: #268ECD;
+			height: 38px;
+		}
+		.grid_item {
+			padding: 6px;
+		}
+		.action_grid label {
+			color: #fff;
+			float: left;
+			line-height: 25px;
+			font-size: 14px;
+      float: left; 
+      margin: 0 10px 0 10px;
+		}
+		.action_grid span {
+			color: #fff;
+			float: left;
+			line-height: 27px;
+			cursor: pointer;
+      padding: 0 10px 0 3px; 
+      margin: 0 10px 0 0;
+      font-size: 12px; 
+      text-decoration: underline;
+		}
+    .action_grid input {
+      color:#fff;
+      margin-top:2px;
+    }
+    .action_grid button {
+      margin: 0 10px 0 0;
+      float: right;
+    }
+
+    /*═════════════════════════════════════════════════════════════════════════════════════════════════════*/
+    /*																                  Data Table
+	  /*═════════════════════════════════════════════════════════════════════════════════════════════════════*/
+		.data_table {
+			width: 100%;
+			border-collapse: collapse;
+			border-spacing: 0;
+			color: #333;
+			width: 100%;
+			border: 1px solid #e9e9e9;
+		}
+		
+		.data_table th {
+			border-bottom: 1px solid #e9e9e9;
+			white-space: nowrap;
+			vertical-align: middle;
+			background-color: #f7f7f7;
+			border-left: 1px solid #e9e9e9;
+			border-bottom: 1px solid #e9e9e9;
+			font-size: 13px;
+			color: #333;
+			padding: 5px;
+			line-height: 22px;
+			height: 20px;
+		}
+		.data_table td {
+			border: 1px solid #e9e9e9;
+			padding: 3px;
+			color: #333;
+			height: 30px;
+			padding: 3px 6px 3px 6px;
+			font-size: 13px;
+			text-align: center;
+		}
+		.data_table tr:nth-child(even) {
+			background: #f7f7f7;
+		}
+		.data_table tr:hover {
+			background: #e9e9e9;
+		}
+		.data_table input {
+			border: none;
+			background: transparent;
+			width: 100%;
+			height: 100%;
+		}
+		.data_table .paste_box {
+			background: transparent; 
+			resize: none; 
+			width: 100%; 
+			border: none; 
+			height: 25px; 
+			line-height: 25px;
+			overflow:hidden;
+			font-family: helvetica,arial,sans-serif;
+		}
+    .data_table img {
+      cursor: pointer
+    }
+
+		/*═════════════════════════════════════════════════════════════════════════════════════════════════════*/
+		/*																                  Popups
+		/*═════════════════════════════════════════════════════════════════════════════════════════════════════*/
+		.popup {
+			height: 100vh;
+			width: 100hh;
+			z-index: 9995;
+			position: fixed;
+			top: 0;
+			left: 0;
+			right: 0;
+			background-color: rgba(81, 81, 81, 0.6);
+			overflow: hidden;
+		}
+		.popup > div {
+			position: absolute;
+			background-color: #fff;
+			border-radius: 5px;
+			left: calc(50% - 300px);
+			top: 20%;
+			width: 600px;
+			-webkit-box-shadow: 4px 4px 12px -4px #000000;
+			box-shadow: 4px 4px 12px -4px #000000;
+			overflow: hidden;
+		}
+		.popup h2 {
+			width: 100%;
+			background: #00bbff;
+			color: #fff;
+			padding: 10px;
+			font-weight: 700;
+			font-size: 17px;
+			color: #fff;
+			margin: 0;
+			font-weight: 700;
+			font-size: 17px;
+			cursor: move;
+		}		
+		.method_selector {
+			padding: 20px 10px 20px 10px;
+		}
+		.method_selector > div {
+			margin: 10px 0 0 0;
+			padding-bottom: 10px;
+		}
+		.method_selector label > div {
+			padding-left: 25px;
+		}
+		.footer {
+			width: 100%;
+			text-align: right;
+			background: #fff;
+			color: ##333;
+			padding: 10px;
+			font-size: 14px;
+			border-top: 1px solid rgba(221, 221, 221, 0.5);
+		}
+		.popup .btn {
+			margin: 5px;
+		}		
+		.response {
+			padding: 20px;
+		}		
+		.progress_bar {
+			width: 100%;
+			padding: 10px 0 10px 0;
+		}
+		.progress_bar > div {
+			background: #9b9b9b;
+			height: 30px;
+			width: 100%;
+			position: relative;
+		}
+		.progress_bar > div > div {
+			position: absolute;
+			top: 0;
+			left: 0;
+			text-align: left;
+			padding-left: 10px;
+			overflow: hidden;
+			width: 100%;
+			background: #35db18;
+			height: 30px;
+			width: 0%;
+			line-height: 30px;
+			color: #fff;
+			transition: all 0.5s;
+		}		
+		.progress_bar > div > div:nth-child(1) {
+			background: transparent;
+			width: 100%;
+		}
+		.progress_bar > div > div:nth-child(2) {
+			white-space: nowrap;
+		}
+		.review_errors {
+			padding: 10px 0 10px 0;    
+		}
+		.review_errors > div:first-child {
+			padding: 10px 0 10px 0;
+		}
+		.review_errors > div:not(:first-child) {
+			overflow: auto;
+			height: 200px;
+		}
+		.review_errors > div > a {
+			width: 33.3%;
+			float: left;
+		}
+		
+    /*═════════════════════════════════════════════════════════════════════════════════════════════════════*/
+    /*																                  Transistions
+	  /*═════════════════════════════════════════════════════════════════════════════════════════════════════*/
+		.fade-enter-active, .fade-leave-active {
+			transition: opacity .5s;
+		}
+		.rotate {
+			animation: rotation 2s infinite linear;
+		}
+		@keyframes rotation {
+			from {
+				transform: rotate(0deg);
+			}
+			to {
+				transform: rotate(359deg);
+			}
+		}
+		
+		.instructions {
+			padding: 10px 0 10px 0;
+		}
+		.instructions > div {
+			color: #333; 
+			font-size: 14px;
+		}
+
+		
+	</style>
+
+	<body>
+	<div id="app">
+  <div v-cloak>
+    <div class="panel">
+      <h1>Bulk Purchase Order Closing</h1>
+    </div>		
+    <!--═════════════════════════════════════════════════════════════════════════════════════════════════════-->
+    <!--                                                   Action Bar                       
+		<!--═════════════════════════════════════════════════════════════════════════════════════════════════════-->
+
+    <div class="action_grid" :style="{ 'background-color': color }">
+      <div class="grid_item">
+        <label>Load from file</label>
+        <span id="downloadTemplate" @click="downloadCsvTemplate()" title="Download a .csv file template">csv template</span>
+        <input type="file" id="csv_file" name="" @change="loadCSV($event)">
+      </div>
+      <div class="grid_item">
+        <button title="Click to close purchase orders" class="btn_green btn" @click="submit()" v-if="empty_test">Submit</button>
+				<button title="Table is empty, ensure you have purchase order values in the table" class="btn_red btn" v-else>Submit</button>				
+        <button class="btn_silver btn" @click="reset()">Reset</button>
+      </div>
+    </div>
+		
+    <!--═════════════════════════════════════════════════════════════════════════════════════════════════════-->
+    <!--                                                   Input Table                        
+		<!--═════════════════════════════════════════════════════════════════════════════════════════════════════-->
+    <table id="dataTable" class="data_table">
+      <thead>
+        <tr>
+          <th style="width:50px"></th>
+          <th style="text-align: left" class="template">Purchase Order ID</th>
+          <th style="width:60px" class="template"></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="data, index in input_array">
+          <td>{{ index +1 }}</td>
+          <td v-if="index == 0">
+            <textarea class="paste_box" v-model="data.col_1" @paste="paste_inputs(index), objName = 'col_1', colIndex = 1 " placeholder="Optional: Paste a list from any table cell..."></textarea>
+          </td>
+          <td v-else>
+            <textarea class="paste_box" v-model="data.col_1" @paste="paste_inputs(index), objName = 'col_1', colIndex = 1 "></textarea>
+          </td>
+          <td>
+            <img style="float:left" title="Remove row" @click="remove_line(index)" v-bind:src="minus_icon" v-if="input_array.length > 1">
+            <img style="float:right" title="Add row" @click="add_line(index)" v-bind:src="plus_icon" v-if="index == ( input_array.length - 1 )">
+          </td>
+        </tr>
+      </tbody>
+    </table>
+		
+    <!--═════════════════════════════════════════════════════════════════════════════════════════════════════-->
+    <!--                                                   Popup                        
+		<!--═════════════════════════════════════════════════════════════════════════════════════════════════════-->
+		<div class="popup" v-show="show_popup">
+			<div id="draggable">
+				<h2 id="draggableheader" :style="{ 'background-color': color }">{{ popup_title }}
+					<img style="float: right; position: relative; top: -5px" :src="moveable_icon">
+				</h2>
+				<div class="method_selector" v-if="show_method_select">
+					<div>
+						<input type="radio" id="standard" value="standard" v-model="picked_method">
+						<label for="standard"><b>Standard</b> Estimated time: {{ standard_estimate }} <br>
+							Update each record sequentially, I'm happy to work on other things while updates are applied
+						</label>
+					</div>
+					<div>
+						<input type="radio" id="turbo" value="turbo" v-model="picked_method">
+						<label for="turbo"><b>Turbo</b> Estimated time: {{ turbo_estimate }} <br>
+							Update as quickly as possible, my browser may become unrepsonive and have trouble using Coupa on alternate tabs while the updates are applied.
+						</label>
+					</div>
+				</div>
+				<div class="response">
+					<div class="progress_bar" v-if="!show_method_select">
+						<div>
+							<div>
+								<template v-if="loading"> {{ progressText }} {{ recordProgress }}% </template>
+								<template v-else> Complete </template>
+							</div>
+							<div v-bind:style="{ width: recordProgress + '%' }">
+								{{ progressText }} {{ recordProgress }}%
+							</div>
+						</div>
+					</div>	
+					<div class="response_data">
+						<span v-if="success_array.length > 0"><b>{{ success_array.length }}</b> succesfull</span><br>
+						<span v-if="error_array.length > 0"><b>{{ error_array.length }}</b> failed
+							<template v-if="!loading">
+								<button class="btn btn_silver" @click="downloadCsv_errorTemplate()">Export List</button>								
+							</template>
+						</span>
+					</div>
+					<div class="review_errors" v-show="error_array.length > 0">
+						<div>Purchase orders failed to closed</div>
+						<div>
+							<table id="errorTable" class="data_table">
+								<thead>
+									<tr>
+										<th style="width:120px; text-align: left" class="template">PO ID</th>
+										<th style="text-align: left" class="template">Error</th>
+									</tr>
+								</thead>
+								<tbody>
+									<tr v-for="data in error_array">
+										<td style="text-align: left" class="template"><a :href="api_url + 'order_headers/' + data.po" target="_blank">{{ data.po }}</a></td>											
+										<td style="text-align: left" class="template">{{ data.error }}</td>
+									</tr>
+								</tbody>
+							</table>
+						</div>
+					</div>					
+				</div>
+				<div class="footer">
+					<button v-if="!loading" class="btn_silver btn" @click="popupClose()">Close</button>
+					<button v-if="show_method_select" class="btn_green btn" @click="update()">Start</button>
+				</div>
+			</div>
+		</div>
+
+		<div class="instructions">
+			<div> *** Review Coupa's documentation on <a target="_blank" href="https://success.coupa.com/Support/Docs/Core_Apps/Procurement/Getting_Started_with_Procurement/Purchase_Orders/Closing_Purchase_Orders">Closing Purchase Orders</a></div>
+			<div> *** Acting user must have PO close permissions</div>
+			<div> *** Purchase orders with pending invoices will fail to close</div>
+			<div> *** Purchase orders already closed will return a success response</div>
+			<div> *** Empty rows will be ignored when submitting</div>
+      <div> *** Rows limited to {{ max_lines - 1 }}</div>
+			<div> *** File import must use CSV files</div>
+		</div> 
+  </div>
+</div>
+	</body>
+
+	<script>
+
+		new Vue({
+			el: "#app",
+			
+			mounted() {
+				this.credentials()			
+			},
+			
+			methods: {
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Set Credentials
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				credentials: function () {
+					
+					//Set URL
+					this.api_url = "https://" + document.location.hostname + "/"
+					
+					//Set Params
+					let params = new URLSearchParams(document.location.search.substring(1))
+					
+					//***Optional, Set Table Background Color
+					if( params.get("color") ){
+						this.color = "#" + params.get("color")
+					}else{
+						this.color = "#268ECD"
+					}
+					
+					//***Optional, Set Input Line Limit
+					if( params.get("lines") ){
+						this.max_lines = parseInt( params.get("lines") ) + 1
+					}else{
+						this.max_lines = 1001
+					}
+					this.SetstartingRows()
+				},
+				
+
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Set Starting Table Rows
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				SetstartingRows: function(){
+					var self = this;
+					if( self.max_lines > 15 ){
+						row_count = 15;
+					}else{
+						row_count = self.max_lines -1;
+					}
+					for (var i = 0; i < row_count; i++) {					
+						self.input_array.push({
+							col_1: "",
+							col_2: "",
+							col_3: "",
+							col_4: ""
+						});
+					}
+				},
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Reset App
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				reset: function () {
+					location.reload()
+				},
+				
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Popup Close
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════		
+				popupClose: function () {
+					var self = this
+					self.show_popup = false
+					self.show_method_select = false
+					self.post_array = []
+					self.success_array = []
+					self.error_array = []
+				},
+				
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Add & Remove Input Rows 
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════	
+				add_line: function (index) {					
+					if( this.input_array.length < (this.max_lines -1) ){
+						this.input_array.push({						
+							col_1: "",
+							col_2: "",
+							col_3: "",
+							col_4: ""	
+						});
+					}					
+				},
+				remove_line: function (index) {
+					this.input_array.splice(index, 1)
+				},		
+				
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Update Method Selection 
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════					
+				submit: function () {
+					var self = this
+					self.popup_title = "Select Update Method"
+					self.show_errors = false
+					self.post_array = []
+					self.error_array = []
+					self.success_array = []
+					
+					//Remove rows missing data
+					self.input_array.forEach((x) => { if(x['col_1'].length > 0 ){ self.post_array.push(x.col_1) } })
+
+					//Estimate time for post length
+							
+					//Standard = 1 x 0.7 seconds, rough estimate from testing
+					x = ( self.post_array.length * 0.7 )
+					if ( x > 60 ) {
+						var xy = Math.floor( x / 60 )
+						var xn = ( Math.abs(x) - (xy*60) ).toFixed(0)
+						self.standard_estimate = xy +  " minutes, " + xn + " seconds"
+					} else {
+						x = x.toFixed(0)
+						self.standard_estimate = x + " seconds"
+					}
+					//Torubo = 1 x 0.13 seconds, rough estimate from testing
+					y = ( self.post_array.length * 0.13 )
+					if ( y > 60 ) {
+						var yy = Math.floor( y / 60 )
+						var yn = ( Math.abs(y) - (yy*60) ).toFixed(0)
+						self.turbo_estimate = yy +  " minutes, " + yn + " seconds"
+					} else {
+						y = y.toFixed(0)
+						self.turbo_estimate = y + " seconds"
+					}					
+			
+					self.show_method_select = !self.show_method_select
+					self.show_popup = !self.show_popup
+				},
+
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Update Method Type 
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════		
+				update: function () {
+					var self = this
+					self.popup_title = "Closing Purchase Orders"
+					self.progressText = "Loading"	
+					self.show_method_select = !self.show_method_select
+					self.loading = !self.loading									
+					if( self.picked_method == 'standard' ){ self.standard_update() }else { self.turbo_update() }
+				},
+				
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Standard PO Close Method 
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════					
+				standard_update: function () {
+					var self = this
+					//Loop through array and close po
+					i = 0;
+					function loop () {
+						axios({
+							method: "get",
+							url: self.api_url + "order_headers/"+ self.post_array[i].trim() +"/close",
+							headers: { "X-Requested-With": "XMLHttpRequest", },							
+						}).then((response) => {							
+							//When Successfull
+							//Check success jquery response data for issues
+							var x = response.data.toString()
+							if( x.indexOf("Cannot close PO") > -1 ){
+								self.error_array.push( { po: self.post_array[i], error: "Cannot close because there are draft or unapproved invoices"} )
+							}else{
+								self.success_array.push( self.post_array[i] )
+							}
+							//Check if all posts are complete
+							if( i < self.post_array.length-1 ){
+								//Restart loop on next record
+								i = i + 1; loop ()
+							}else{
+								//When done
+								self.update_complete()
+							}							
+						}).catch((error) => {
+							//When Error
+							self.error_array.push( { po: self.post_array[i], error: "PO ID is not valid or you do not have permission"} )
+							if( i < self.post_array.length-1 ){
+								//Restart loop on next record
+								i = i+1; loop ()
+							}else{
+								//When done
+								self.update_complete()
+							}
+						})						
+					}loop()
+				},
+				
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Turbo PO Close Method 
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════					
+				turbo_update: function () {
+					var self = this;
+					self.post_array.forEach((y,i) => {
+						axios({
+							method: "get",
+							url: self.api_url + "order_headers/"+ y.trim() +"/close",
+							headers: { "X-Requested-With": "XMLHttpRequest", },							
+						}).then((response) => {
+							//When Successfull
+							//Check success jquery response data for issues
+							var x = response.data.toString()
+							if( x.indexOf("Cannot close PO") > -1 ){
+								self.error_array.push( { po: self.post_array[i], error: "Cannot close because there are draft or unapproved invoices"} )
+							}else{
+								self.success_array.push( self.post_array[i] )
+							}
+							//Check if all posts are complete
+							if( ( self.success_array.length + self.error_array.length ) == self.post_array.length ){
+								//When done
+								self.update_complete()
+							}
+						}).catch((error) => {
+							//When Error
+							self.error_array.push( { po: self.post_array[i], error: "PO ID is not valid or you do not have permission"} )
+							if( ( self.success_array.length + self.error_array.length ) == self.post_array.length ){
+								//When done
+								self.update_complete()
+							}
+						})	
+					})
+				},
+				
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Standard PO Close Method 
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════					
+				update_complete: function () {
+					var self = this;
+					self.progressText = "Complete";
+					self.loading = !self.loading;		
+				},				
+		
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Download CSV File Template 
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				download_csv: function (csv, filename) {
+					var csvFile
+					var downloadLink
+					csvFile = new Blob([csv], {type: "text/csv"})
+					downloadLink = document.createElement("a")
+					downloadLink.download = filename
+					downloadLink.href = window.URL.createObjectURL(csvFile)
+					downloadLink.style.display = "none"
+					document.body.appendChild(downloadLink)
+					downloadLink.click()
+				},	
+				export_table_to_csv: function (html, filename) {
+					var csv = []
+					var rows = document.querySelectorAll("#dataTable tr")			
+					for (var i = 0; i < rows.length; i++) {
+						var row = [], cols = rows[i].querySelectorAll(".template")
+						for (var j = 0; j < cols.length; j++) 
+						row.push(cols[j].innerText)
+						csv.push(row.join(","))
+					}
+					this.download_csv(csv.join("\n"), filename)
+				},
+				downloadCsvTemplate: function(){
+					var html = document.querySelector("#dataTable").outerHTML
+					this.export_table_to_csv(html, "template.csv")
+				},
+
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Download CSV File Error List 
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				download_error_csv: function (csv, filename) {
+					var csvFile
+					var downloadLink
+					csvFile = new Blob([csv], {type: "text/csv"})
+					downloadLink = document.createElement("a")
+					downloadLink.download = filename
+					downloadLink.href = window.URL.createObjectURL(csvFile)
+					downloadLink.style.display = "none"
+					document.body.appendChild(downloadLink)
+					downloadLink.click()
+				},	
+				export_error_table_to_csv: function (html, filename) {
+					var csv = []
+					var rows = document.querySelectorAll("#errorTable tr")			
+					for (var i = 0; i < rows.length; i++) {
+						var row = [], cols = rows[i].querySelectorAll(".template")
+						for (var j = 0; j < cols.length; j++) 
+						row.push(cols[j].innerText)
+						csv.push(row.join(","))
+					}
+					this.download_error_csv(csv.join("\n"), filename)
+				},
+				downloadCsv_errorTemplate: function(){
+					var html = document.querySelector("#errorTable").outerHTML
+					this.export_error_table_to_csv(html, "PO close errors.csv")
+				},				
+
+				
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Copy & Paste into Table 
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════		
+				paste_inputs: function (index) {
+					setTimeout(
+						function () {
+							var lines = this.input_array[index][this.objName].split("\n");
+
+							var a =  this.input_array.length; //Current Table Count
+							var b =  lines.length;            //Paste Data count
+							var c =  index ;                	//Start Row Index
+							var d =  this.max_lines -1 ;      //Max Lines
+
+							//Create additional table rows if required
+							//When paste rows fits within max lines limit
+							if( b + c < d ){
+								var f = ( a - c );
+								var f = b - f;
+								for (let i = 0; i < f; i++) {
+									this.input_array.push({ col_1: "", col_2: "", col_3: "", col_4: "" });
+								}
+							}
+							//When paste rows exceeds max lines limit
+							else{
+								var f = d - a;
+								for (let i = 0; i < f; i++) {
+									this.input_array.push({ col_1: "", col_2: "", col_3: "", col_4: "" });
+								}
+							}
+							//Paste Data
+							var y = this.colIndex;
+							for (let i = 0; i < lines.length; i++, index++) {
+								var str = lines[i].split("\t");
+								for (let j = 0; j < this.setTableColumnCount; j++) {
+									if(str[j] ){ this.input_array[index]['col_' + (y+j) ] = str[j] }
+								}
+							}
+						}.bind(this),
+						10
+					);
+				},
+				
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════
+				//                                                   Upload CSV File 
+				//═════════════════════════════════════════════════════════════════════════════════════════════════════				
+				csvJSON(csv) {
+					var temp_array = []
+					var self = this
+					function csvToArray(text) {
+						let p = "",
+							row = [""],
+							ret = [row],
+							i = 0,
+							r = 0,
+							s = !0,
+							l;
+						for (l of text) {
+							if ('"' === l) {
+								if (s && l === p) row[i] += l
+								s = !s;
+							} else if ("," === l && s) l = row[++i] = ""
+							else if ("\n" === l && s) {
+								if ("\r" === p) row[i] = row[i].slice(0, -1)
+								row = ret[++r] = [(l = "")]
+								i = 0
+							} else row[i] += l
+							p = l;
+						}
+						return ret
+					}
+					temp_array = csvToArray(csv)
+					temp_array.pop()
+					this.input_array = []
+					for (let i = 1; i < this.max_lines; i++) {
+						this.input_array.push({
+							col_1: temp_array[i][0],
+							col_2: temp_array[i][1],
+							col_3: temp_array[i][2],
+							col_4: temp_array[i][3]
+						});
+					}
+				},
+				loadCSV(e) {
+					var self = this
+					if (window.FileReader) {
+						var reader = new FileReader()
+						reader.readAsText(e.target.files[0])
+						reader.onload = function (event) {
+							var csv = event.target.result
+							self.parse_csv = self.csvJSON(csv)
+						};
+						reader.onerror = function (evt) {
+							if (evt.target.error.name == "NotReadableError") {
+								alert("Canno't read file !")
+							}
+						};
+					} else {
+						alert("FileReader are not supported in this browser.")
+					}
+				}
+			},
+			
+			computed: {
+				// Progress Percentage
+				recordProgress() {
+					x = ( ( this.success_array.length + this.error_array.length ) / this.post_array.length ) * 100; x = x.toFixed(0); return x
+				},
+				empty_test() {
+					x = false         
+					this.input_array.forEach((y) => {
+						if( y.col_1 == '' ){            	         
+            }else {
+              x = true 
+            }
+					})
+         return x        
+				},
+			},
+		
+			data: {
+				//Headers
+				api_url: "",
+				color: "",
+				max_lines: 1001,
+				
+				//Popup misc
+				show_popup: false,
+				popup_title: "",
+				
+				//Popup Method
+				show_method_select: false,  
+				picked_method: "standard",
+				standard_estimate: "",
+				turbo_estimate: "",
+				
+				//Popup Method
+				loading: false,
+				progressText: "Updating",
+				
+				//Error List
+				show_errors: false,
+				
+				//Arrays
+				input_array: [],
+				success_array: [],
+				error_array: [],
+				post_array: [],
+
+				//Table References
+				objName: "", //For cell model of past function
+				colIndex: "", //For cell index of past function
+				setTableColumnCount: 4, //Sets the number of colums to add during paste function
+		
+				//Images Base64
+  			minus_icon:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAABqElEQVQ4ja2UwWoTURiFv3NnaKOtC6FNasD4AmLpQlsQqcsWChVx2UfwAbRPUJfSx3AnFHRXXM1CIfUJ4uAwzHQxFtKYBDq/C9OmaTM60ZzdPff+3z2Xe+8vCmSLi/N43iawilkNACkBAs7OPuj4uD2uTtdAjcZt+v3XwEvgRsF+P4F9Zmb2FIZZIdCq1Qc49x64V5R8dHeLcO6Z4vjzNaDV6yvk+SdgvhRsqDae90RR1LwADo55BNydEHaukEplWa3WDwdAv7/7HzCABt3uKwDZwsItfD+h+ALKqoNZ1eH7m1OAAdzEuQ0feDhib23B+no5xOEhHBwMx2aPfKQ6ZkNzbQ12dsoBu92rwLojz624YkJJ5iPFI2YQwOxsOUAQXHVi2dLSC+DdNAIiPdegCaRM69kMusb+FNK9VZKcXv56TaDxj7hv9HrLyrITB6AwzPC8bWBsj/uL2uT5trLsBMBdJI6iJnn+GGhNAPuO9FRpenRuuMuzStOvVCorwBug8wdQB2mPXu++4vjLCKOowmq1OZzbwGwVszu/VytGCsjzj0qS03F1vwBoJpLT6fb98QAAAABJRU5ErkJggg==",
+				plus_icon:"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAABmJLR0QA/wD/AP+gvaeTAAACPUlEQVQ4ja2UQU8TQRTHf2/YGqAV02hCJLEYLiRS2kK1RMXIAREkMRw8+B3UePCCJh6MFzwSvomJBFoTCBCtCtoWqiZexGAaL1SRlrClOx6wm7ZsCTX+T/t/8+a372VmnlBDXekBj9pxjQj0aS2tACL6B1rixWZzJt01v+20T6oD3alRr+wWHiLcBZpq/G9HRKYslzGxGniRrQn0rwwHlC4+B2mvVXmVvltKj631xpYPAIPvBnu0qAXAc0RYSdvK0lcSkVjCBnanRr1iFpLAmers696rRFpCAMS33hPLLjpBv6kGM5jomf9pAIhZeOQEA7h04jxjJ4dsXwPo00XXODCuOpduHgfuHL1DZ2nkXiA55FaNTbsj1D7NetSMKcOG1vpCeXTQ28/FlrDtQ+5z9nevx8/j9vu2f721wsvsku1FETGAtnJg2NPNrVM3HEvoaPTR0eizfcEqVAAtS7cpAV1vb7UkSmtDQ6Y8uJr7TDS7YHu/u5O2Y60AbOxm+Jj/Yq+lcp8qgaiMgeZN+XuZ3pxjenPO9k/OPrCvTfz3B56uTx5SoxVXxWZzBtiptz0H5bUhUZXumt8Wkan/AJxMBaM5A8ByGRNiFm4DvuqsV7+W2dN7wP7Tc5Zed6GfQdlwCL29FrKULPIPw6GopD/dO5sEUKVoIhJLWKIuA1/rgG1oYaAEqwACrIVnUqrB7JH98vOHgPIaJlxY/tVwdKV84cDELimQHHJjyjDoPg2n/yZnRKm4NqzZVDCac9r3BzVpyDimYhFNAAAAAElFTkSuQmCC",
+				moveable_icon: "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAB4AAAAeCAYAAAA7MK6iAAAABmJLR0QA/wD/AP+gvaeTAAABOklEQVRIidWXT0rEMBTGf28YXBcv4qAX6EmEAVfuBI8huBI3/ll5HRkvInMCPzevGmuapqltxw8KSdq8X/P68pHCf5OklaRV6fyiiZIMuAMexsAHQyXd61tPk8Mj0OnhCWgR3AaAj4FT754AN96+Bt68/Wpm77kxB0tSHay0LokxT0UePNjNoRobXFKVXXBB9XZ+Ow9Y+9X5gn6/v9pbW6aoaCLg6FZbh1DgEdj60EZSO9bOzPYdkArYtIab/hY4knRuZh/hpD5z6N06rS3WazKLVfWXc0VSfQXsWs+XpPrW2y/Az1SH8NmLC8DMJOkyI2C4us4suJ6Bi+hKI4GTBqJMr1bCQNaxQX+71CqylMrEYXn1HIqmOib9Pgg0OpPUxPn7g0CGuy1y7lrkpDk9NAKfDxrAR/3CLKZPNYLq7pjVULsAAAAASUVORK5CYII=",				
+			}
+		});
+		
+		//Make the DIV element draggagle:
+		dragElement(document.getElementById("draggable"));
+		
+		function dragElement(elmnt) {
+			var pos1 = 0,
+				pos2 = 0,
+				pos3 = 0,
+				pos4 = 0;
+			if (document.getElementById(elmnt.id + "header")) {
+				/* if present, the header is where you move the DIV from:*/
+				document.getElementById(elmnt.id + "header").onmousedown = dragMouseDown;
+			} else {
+				/* otherwise, move the DIV from anywhere inside the DIV:*/
+				elmnt.onmousedown = dragMouseDown;
+			}
+		
+			function dragMouseDown(e) {
+				e = e || window.event;
+				e.preventDefault();
+				// get the mouse cursor position at startup:
+				pos3 = e.clientX;
+				pos4 = e.clientY;
+				document.onmouseup = closeDragElement;
+				// call a function whenever the cursor moves:
+				document.onmousemove = elementDrag;
+			}
+		
+			function elementDrag(e) {
+				e = e || window.event;
+				e.preventDefault();
+				// calculate the new cursor position:
+				pos1 = pos3 - e.clientX;
+				pos2 = pos4 - e.clientY;
+				pos3 = e.clientX;
+				pos4 = e.clientY;
+				// set the element's new position:
+				elmnt.style.top = elmnt.offsetTop - pos2 + "px";
+				elmnt.style.left = elmnt.offsetLeft - pos1 + "px";
+			}
+		
+			function closeDragElement() {
+				/* stop moving when mouse button is released:*/
+				document.onmouseup = null;
+				document.onmousemove = null;
+			}
+		}
+
+	</script>
+</html>
